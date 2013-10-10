@@ -1,0 +1,10 @@
+{
+    "name": "bier-storage"
+  , "version": "0.0.1"
+  , "description": "An abstracted storage layer on top of kadoh"
+  , "main" : "./index.js"
+  , "browserify" : "./index-browserify.js"
+  , "dependencies": {
+        "kadoh"            : "git+https://github.com/agrigoroi/kadoh.git"
+    }
+}
