@@ -38,9 +38,8 @@ var Node = module.exports = {
   },
 
   put: function(namespace, key, value, callback) {
-    console.log("wtf");
-    node.put(generateHash(namespace, key), value);
-    callback();
+    obj = {namespace: namespace, key: key, value:value};
+    node.put(generateHash(namespace, key), JSON.stringify(obj), null, callback);
   }
 
   // //This thing doesnt work
