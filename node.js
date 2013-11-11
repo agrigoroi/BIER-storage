@@ -25,10 +25,11 @@ var Node = module.exports = {
   node: null,
 
   connect: function(addresses, callback) {
-    config.bootstraps = addresses;
-    node = new kadoh.Node(undefined, config);
-    node.connect(function() {
-      node.join(callback);
+    if(addresses !== null) 
+      config.bootstraps = addresses;
+    Node.node = KadOH.node = new KadOH.Node(undefined, config);
+    Node.node.connect(function() {
+      Node.node.join(callback);
     });
   },
 
@@ -37,6 +38,7 @@ var Node = module.exports = {
   },
 
   put: function(namespace, key, value, callback) {
+    console.log("wtf");
     node.put(generateHash(namespace, key), value);
     callback();
   }
