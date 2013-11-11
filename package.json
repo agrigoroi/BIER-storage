@@ -7,6 +7,8 @@
   , "dependencies": {
         "kadoh": "git+https://github.com/agrigoroi/kadoh.git",
         "browserify": "https://github.com/alexstrat/node-browserify/tarball/for-kadoh",
-        "tagify": "latest"
+        "tagify": "latest",
+        "mustache": "latest",
+        "connect": "latest"
     }
 }

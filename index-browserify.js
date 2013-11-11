@@ -1,6 +1,3 @@
-window.Bier-storage = {
-  Node = require("./node");
-  kadoh = require("kadoh");
+window.BIERstorage = {
+  Node: require('./node')
 }
-
-exports.Node 

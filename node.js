@@ -1,70 +1,101 @@
-var Node = module.exports = {
-  connect: function(address, callback) {
-    callback();
+var kadoh = require("kadoh");
+var crypto = kadoh.util.crypto;
+var config = {
+  bootstraps : ["127.0.0.1:3000", "127.0.0.1:3001", "127.0.0.1:3002"],
+  reactor : {
+    protocol  : 'jsonrpc2',
+    type      : 'SimUDP',
+    transport : {
+      transports : [
+        'flashsocket', 
+        'htmlfile', 
+        'xhr-multipart', 
+        'xhr-polling', 
+        'jsonp-polling'
+      ]
+    }
   }
+};
+
+generateHash = function(namespace, key) {
+  return crypto.digest.SHA1(namespace+key);
+}
+
+var Node = module.exports = {
+  node: null,
+
+  connect: function(addresses, callback) {
+    config.bootstraps = addresses;
+    node = new kadoh.Node(undefined, config);
+    node.connect(function() {
+      node.join(callback);
+    });
+  },
 
   get: function(namespace, key, callback) {
-    var value = null;
-    callback(value);
-  }
+    node.get(generateHash(namespace, key), callback);
+  },
 
   put: function(namespace, key, value, callback) {
+    node.put(generateHash(namespace, key), value);
     callback();
   }
 
-  //This thing doesnt work
-  lscan: function(namespace, callback) {
-    var values = [];
-    callback(values);
-  }
+  // //This thing doesnt work
+  // lscan: function(namespace, callback) {
+  //   var values = [];
+  //   callback(values);
+  // }
 
-  lscan: function(callback) {
-    var values = [];
-    callback(values);
-  }
+  // lscan: function(callback) {
+  //   var values = [];
+  //   callback(values);
+  // }
 
-  setGlobal: function(object, callback) {
-    callback();
-  }
+  // setGlobal: function(object, callback) {
+  //   callback();
+  // }
 
-  getGlobal: function(callback) {
-    var object = null;
-    callback(object);
-  }
+  // getGlobal: function(callback) {
+  //   var object = null;
+  //   callback(object);
+  // }
 
-  addGlobalList: function(list, callback) {
-    callback();
-  }
+  // addGlobalList: function(list, callback) {
+  //   callback();
+  // }
 
-  getGlobalList: function(callback) {
-    var list = [];
-    callback(list);
-  }
+  // getGlobalList: function(callback) {
+  //   var list = [];
+  //   callback(list);
+  // }
 
-  // This thing doest work
-  send: function(key, message, callback) {
-    callback();
-  }
+  // // This thing doest work
+  // send: function(key, message, callback) {
+  //   callback();
+  // }
 
-  send: function(message, callback) {
-    callback();
-  }
+  // send: function(message, callback) {
+  //   callback();
+  // }
 
-  registerMessageHandler: function(func) {
-    return;
-  }
+  // registerMessageHandler: function(func) {
+  //   return;
+  // }
 
-  insertPHT: function(name, key, values, callback) {
-    callback();
-  }
+  // insertPHT: function(name, key, values, callback) {
+  //   callback();
+  // }
 
-  findPHT: function(name, key, callback) {
-    var value = null;
-    callback(value);
-  }
+  // findPHT: function(name, key, callback) {
+  //   var value = null;
+  //   callback(value);
+  // }
 
-  rangePHT: function(name, startKey, endKey, callback) {
-    var list = [];
-    callback(list);
-  }
+  // rangePHT: function(name, startKey, endKey, callback) {
+  //   var list = [];
+  //   callback(list);
+  // }
 }
+
+exports.Node = 4;
