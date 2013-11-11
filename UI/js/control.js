@@ -7,37 +7,25 @@ KadOHui.Control = function(node) {
   this.joinBtn    = $("#join_btn").button();
 
   this.putBtn     = $("#put_btn").button();
-  this.putValue   = $("#put_value");
+  this.putNamespace=$("#put_namespace");
   this.putKey     = $("#put_key");
+  this.putValue   = $("#put_value");
   this.putResult  = $("#put_result");
 
   this.getBtn     = $("#get_btn").button();
   this.getKey     = $("#get_key");
+  this.getNamespace=$("#get_namespace");
   this.getResult  = $("#get_result");
 
   this.pingBtn     = $("#ping_btn").button();
   this.pingAddress = $("#ping_address");
   this.pingResult  = $("#ping_result");
 
-  this.initJoin()
-      .initGet()
-      .initPut()
-      .initPing();
+  this.initGet()
+      .initPut();
 };
 
 KadOHui.Control.prototype = {
-  initJoin: function() {
-    var that = this;
-    var onJoin = function() {
-      that.joinBtn.unbind('click', onJoin);
-      that.joinBtn.button('loading');
-      that.node.join(function() {
-        that.joinBtn.button('complete').button('toggle');
-      });
-    };
-    this.joinBtn.click(onJoin);
-    return this;
-  },
 
   initGet: function() {
     var that = this;
@@ -48,14 +36,15 @@ KadOHui.Control.prototype = {
     var onGet = function() {
       that.getBtn.unbind('click', onGet)
                  .button('toggle');
+      var namespace = that.getNamespace.val();
       var key = that.getKey.val();
       content.hide();
       loader.show();
       result.show();
-      that.node.get(key, function(value) {
+      BIERstorage.Node.get(namespace, key, function(value) {
         var text;
         if (!value) {
-          text = '<strong>value not found for key <code>'+KadOHui.util.escapeHTML(key)+'</code></strong>';
+          text = '<strong>value not found for this namespace and key</strong>';
         } else {
           text = value;
         }
@@ -77,7 +66,9 @@ KadOHui.Control.prototype = {
       that.putBtn.unbind('click', onPut)
                  .button('toggle');
       var value = that.putValue.val();
-      that.node.put(null, value, null, function(key) {
+      var namespace = that.putNamespace.val();
+      var key = that.putKey.val(); 
+      BIERstorage.Node.put(namespace, key, value, function(key) {
         tbody.append(
           "<tr>" +
           "<td><code>"+key+"</code></td>" +
@@ -88,32 +79,6 @@ KadOHui.Control.prototype = {
       });
     };
     this.putBtn.click(onPut);
-    return this;
-  },
-
-  initPing: function() {
-    var that = this;
-    var onPing = function() {
-      that.pingBtn.unbind('click', onPing)
-                  .button('toggle');
-      that.pingResult.empty();
-      var address = that.pingAddress.val();
-      var peer = new (require('/lib/dht/bootstrap-peer'))(address);
-      var ping = new (require('/lib/network/rpc/ping'))(peer);
-
-      ping.then(function() {
-        that.pingResult.html('<img src="/UI/img/success-icon24.png">'+
-                             '<code>'+ping.getQueried().getID()+'</code>');
-      }, function() {
-        that.pingResult.html('<img src="/UI/img/error-icon24.png">');
-      }).always(function() {
-        that.pingBtn.click(onPing)
-                    .button('toggle');
-      });
-
-      that.node._reactor.sendRPC(ping)
-    };
-    this.pingBtn.click(onPing);
     return this;
   },
 
