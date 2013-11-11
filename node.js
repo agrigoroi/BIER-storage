@@ -25,7 +25,7 @@ var Node = module.exports = {
   node: null,
 
   connect: function(addresses, callback) {
-    if(addresses !== null) 
+    if(addresses instanceof Array) 
       config.bootstraps = addresses;
     Node.node = KadOH.node = new KadOH.Node(undefined, config);
     Node.node.connect(function() {
@@ -98,5 +98,3 @@ var Node = module.exports = {
   //   callback(list);
   // }
 }
-
-exports.Node = 4;

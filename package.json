@@ -5,7 +5,7 @@
   , "main" : "./index.js"
   , "browserify" : "./index-browserify.js"
   , "dependencies": {
-        "kadoh": "git+https://github.com/agrigoroi/kadoh.git",
+        "kadoh": "https://github.com/agrigoroi/kadoh/tarball/master",
         "browserify": "https://github.com/alexstrat/node-browserify/tarball/for-kadoh",
         "tagify": "latest",
         "mustache": "latest",

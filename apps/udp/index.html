@@ -40,11 +40,6 @@
   }
 };
 
-function createNode() {
-  //hmm
-  console.log("createNode");
-}
-
 function onConnect() {
 
   node = BIERstorage.Node.node;
@@ -74,8 +69,6 @@ function connect() {
 
 $(function() {
   KadOHui.init();
-
-  createNode();
 
   var connectBtn = $('#connection_btn')
   connectBtn.button();
