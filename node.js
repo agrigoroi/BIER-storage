@@ -40,18 +40,25 @@ var Node = module.exports = {
   put: function(namespace, key, value, keepAlive, callback) {
     obj = {namespace: namespace, key: key, value:value};
     Node.node.put(generateHash(namespace, key), JSON.stringify(obj), keepAlive, callback);
+  },
+
+  lscan: function(namespace, callback) {
+    //Hack to get storage manager
+    var store = Node.node._store;
+    var results = {};
+    store.keys(function(keys) {
+      var left = keys.length;
+      for(key in keys) {
+        store.retrieve(keys[key], function(value, exp) {
+          results[keys[key]] = value;
+          left=left-1;
+          if(left==0) {
+            callback(results);
+          }
+        });
+      }
+    });
   }
-
-  // //This thing doesnt work
-  // lscan: function(namespace, callback) {
-  //   var values = [];
-  //   callback(values);
-  // }
-
-  // lscan: function(callback) {
-  //   var values = [];
-  //   callback(values);
-  // }
 
   // setGlobal: function(object, callback) {
   //   callback();
