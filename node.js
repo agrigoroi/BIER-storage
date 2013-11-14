@@ -1,5 +1,5 @@
-var kadoh = require("kadoh");
-var crypto = kadoh.util.crypto;
+var KadOH = require("kadoh");
+var crypto = KadOH.util.crypto;
 var config = {
   bootstraps : ["127.0.0.1:3000", "127.0.0.1:3001", "127.0.0.1:3002"],
   reactor : {
@@ -27,19 +27,19 @@ var Node = module.exports = {
   connect: function(addresses, callback) {
     if(addresses instanceof Array) 
       config.bootstraps = addresses;
-    Node.node = KadOH.node = new KadOH.Node(undefined, config);
+    Node.node = KadOH.node = new KadOH.logic.KademliaNode(undefined, config);
     Node.node.connect(function() {
       Node.node.join(callback);
     });
   },
 
   get: function(namespace, key, callback) {
-    node.get(generateHash(namespace, key), callback);
+    Node.node.get(generateHash(namespace, key), callback);
   },
 
-  put: function(namespace, key, value, callback) {
+  put: function(namespace, key, value, keepAlive, callback) {
     obj = {namespace: namespace, key: key, value:value};
-    node.put(generateHash(namespace, key), JSON.stringify(obj), null, callback);
+    Node.node.put(generateHash(namespace, key), JSON.stringify(obj), keepAlive, callback);
   }
 
   // //This thing doesnt work

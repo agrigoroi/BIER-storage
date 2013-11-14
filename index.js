@@ -1,2 +1,3 @@
 exports.Node = require("./node");
-exports.kadoh = require("kadoh");
+exports.KadOH = require("kadoh");
+
