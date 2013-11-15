@@ -23,6 +23,7 @@ generateHash = function(namespace, key) {
 
 var Node = module.exports = {
   node: null,
+  messageHandler: null,
 
   connect: function(addresses, callback) {
     if(addresses instanceof Array) 
@@ -30,11 +31,32 @@ var Node = module.exports = {
     Node.node = KadOH.node = new KadOH.logic.KademliaNode(undefined, config);
     Node.node.connect(function() {
       Node.node.join(callback);
+      Node.node._store.on("save", function(keyValue) {
+        try {
+          var value = JSON.parse(keyValue.value);
+          if(value.hasOwnProperty("message")) {
+            //It's a message
+            //if message is for this user
+            //   and a function to handle messages is registered 
+            //     then notify the user
+            if(keyValue.key == node.getID()) 
+              if(Node.messageHandler !== null)
+                Node.messageHandler(value.message);
+            //Remove this key
+            Node.node._store._expire(keyValue);
+          }
+        } catch(err) {
+          //Hmm not an object, dont know what to do with such case, as they dont happen
+          console.log("value not object" + keyValue.value+": "+err);
+        }
+      });
     });
   },
 
   get: function(namespace, key, callback) {
-    Node.node.get(generateHash(namespace, key), callback);
+    Node.node.get(generateHash(namespace, key), function(value) {
+      callback(JSON.parse(value));
+    });
   },
 
   put: function(namespace, key, value, keepAlive, callback) {
@@ -58,7 +80,18 @@ var Node = module.exports = {
         });
       }
     });
+  },
+
+  // This thing doest work
+  send: function(key, message, callback) {
+    var obj = {message: message};
+    Node.node.put(key, JSON.stringify(obj), null, callback);
+  },
+
+  registerMessageHandler: function(func) {
+    Node.messageHandler = func;
   }
+
 
   // setGlobal: function(object, callback) {
   //   callback();
@@ -78,17 +111,8 @@ var Node = module.exports = {
   //   callback(list);
   // }
 
-  // // This thing doest work
-  // send: function(key, message, callback) {
-  //   callback();
-  // }
-
   // send: function(message, callback) {
   //   callback();
-  // }
-
-  // registerMessageHandler: function(func) {
-  //   return;
   // }
 
   // insertPHT: function(name, key, values, callback) {
