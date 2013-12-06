@@ -71,8 +71,8 @@ var Node = module.exports = {
     store.keys(function(keys) {
       var left = keys.length;
       for(key in keys) {
-        store.retrieve(keys[key], function(value, exp) {
-          results[keys[key]] = value;
+        store.retrieve(key, function(value, exp) {
+          results[key] = value;
           left=left-1;
           if(left==0) {
             callback(results);
