@@ -1,4 +1,5 @@
 var KadOH = require("kadoh");
+var MessageRPC = KadOH.network.rpc.Message;
 var crypto = KadOH.util.crypto;
 var config = {
   bootstraps : ["127.0.0.1:3000", "127.0.0.1:3001", "127.0.0.1:3002"],
@@ -138,14 +139,24 @@ var Node = module.exports = {
   },
 
   // This thing doest work
-  send: function(key, message, callback) {
-    var obj = {message: message};
-    Node.node.put(key, JSON.stringify(obj), null, callback);
+  send: function(node, message, callback) {
+    Node.node.sendMessage(node, message, callback);
+  },
+
+  sendByKey: function(namespace, key, message, callback) {
+    Node.send(generateHash(namespace, key), message, callback);
+  },
+
+  registerHandler: function(obj) {
+    //TODO: ask Tomo about the key name
+    Node.registerMessageHandler(obj.message());
   },
 
   registerMessageHandler: function(func) {
-    Node.messageHandler = func;
+    Node.node.messageHandler = func;
   }
+
+  // sendAll: 
 
 
   // setGlobal: function(object, callback) {
