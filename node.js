@@ -64,18 +64,49 @@ var Node = module.exports = {
     Node.node.put(generateHash(namespace, key), JSON.stringify(obj), keepAlive, callback);
   },
 
+  /**
+   * Scan all the data from a namespace stored locally in this node:
+   * 
+   * Returns an object of form:
+   * {
+   *   key1: value1,
+   *   key2: value2,
+   *   ...
+   *  }
+   * If namespace is null, scans all the namespaces and returns an object of form:
+   * {
+   *   namespace1: {
+   *     key1: value1,
+   *     ...
+   *    },
+   *   namespace2: { ... },
+   *   ...
+   * }
+   * 
+   * @param  {String} namespace - the namespace that we want the object from.
+   * 
+   */
   lscan: function(namespace, callback) {
-    //Hack to get storage manager
     var store = Node.node._store;
-    var results = {};
     store.keys(function(keys) {
+      var results = {};
       var left = keys.length;
+      if(left == 0) 
+        callback({});
       for(key in keys) {
         store.retrieve(keys[key], function(value, exp) {
-          results[keys[key]] = value;
-          left=left-1;
-          if(left==0) {
-            callback(results);
+          try {
+            value = JSON.parse(value);
+            if(value.namespace == namespace)
+              results[value.key] = value.value;
+            if(namespace == null)
+              results[value.namespace][value.key] = value.value;
+          } catch(e) {
+            console.log("Stored value \"" + value + "\" is not a BIER-storage object, ignoring");
+          } finally {
+            left=left-1;
+            if(left==0)
+              callback(results);
           }
         });
       }
