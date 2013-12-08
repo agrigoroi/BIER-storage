@@ -25,8 +25,15 @@ var Node = module.exports = {
   node: null,
   messageHandler: null,
 
+  /**
+   * Connects to the a BIER network:
+   * If addresses is not an array or is empty, connects to the default bootstraps:
+   *   [127.0.0.1:3000, 127.0.0.1:3001, 127.0.0.1:3002]
+   *
+   * @param  {Array} addresses - The addresses of one or more bootstrap nodes.
+   */
   connect: function(addresses, callback) {
-    if(addresses instanceof Array) 
+    if(addresses instanceof Array && addresses.length > 0) 
       config.bootstraps = addresses;
     Node.node = KadOH.node = new KadOH.logic.KademliaNode(undefined, config);
     Node.node.connect(function() {
@@ -53,12 +60,29 @@ var Node = module.exports = {
     });
   },
 
+  /**
+   * Gets an object stored in the network:
+   * If such an object couldn't been found returns null
+   *
+   * @param  {String} namespaces - The namespace of the object.
+   * @param  {String} key - The key of the object.
+   * @return {Object} 
+   */
   get: function(namespace, key, callback) {
     Node.node.get(generateHash(namespace, key), function(value) {
       callback(JSON.parse(value));
     });
   },
 
+  /**
+   * Stores any type in the network:
+   * The object is transformed in a string using JSON.strigify before being stored.
+   *
+   * @param  {String} namespaces - The namespace of the object.
+   * @param  {String} key - The key of the object.
+   * @param  {Any}    value - The value to be stored.
+   * @param  {Number} keepAlive - The duration in seconds to keep this object
+   */
   put: function(namespace, key, value, keepAlive, callback) {
     obj = {namespace: namespace, key: key, value:value};
     Node.node.put(generateHash(namespace, key), JSON.stringify(obj), keepAlive, callback);
