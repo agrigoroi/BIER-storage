@@ -154,10 +154,11 @@ var Node = module.exports = {
 
   registerMessageHandler: function(func) {
     Node.node.messageHandler = func;
+  },
+
+  broadcast: function(message) {
+    Node.node.broadcast(message);
   }
-
-  // sendAll: 
-
 
   // setGlobal: function(object, callback) {
   //   callback();
@@ -166,19 +167,6 @@ var Node = module.exports = {
   // getGlobal: function(callback) {
   //   var object = null;
   //   callback(object);
-  // }
-
-  // addGlobalList: function(list, callback) {
-  //   callback();
-  // }
-
-  // getGlobalList: function(callback) {
-  //   var list = [];
-  //   callback(list);
-  // }
-
-  // send: function(message, callback) {
-  //   callback();
   // }
 
   // insertPHT: function(name, key, values, callback) {
