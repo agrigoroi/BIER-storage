@@ -23,8 +23,41 @@ generateHash = function(namespace, key) {
 }
 
 var Node = module.exports = {
+  
   node: null,
-  messageHandler: null,
+  _global: {},
+
+  messageHandlerFunction: null,
+
+  messageHandler: function(rpc) {
+    var message = rpc.getMessage();
+    console.log(message);
+    message = JSON.parse(message);
+    switch(message.type) {
+      case "message":
+        if(Node.messageHandlerFunction !== null) {
+          Node.messageHandlerFunction(message.data);
+          rpc.resolve();
+        } else {
+          rpc.reject();
+        }
+        break;
+      case "global":
+        var globals = message.globals;
+        for(var index in globals)
+          Node._global[globals[index].key] = globals[index].value;
+        rpc.resolve();
+        break;
+      case "requestGlobal":
+        var message = {
+          type: "global",
+          globals: {}
+        }
+        for(key in Node._global)
+          message.global.push({key: key, value: Node.global[key]});
+        Node.send(rpc.getID(), JSON.strigify(message), function() {rpc.resolve()});//Its not rpc.getID()!!
+    }
+  },
 
   /**
    * Connects to the a BIER network:
@@ -38,27 +71,17 @@ var Node = module.exports = {
       config.bootstraps = addresses;
     Node.node = KadOH.node = new KadOH.logic.KademliaNode(undefined, config);
     Node.node.connect(function() {
-      Node.node.join(callback);
-      Node.node._store.on("save", function(keyValue) {
-        try {
-          var value = JSON.parse(keyValue.value);
-          if(value.hasOwnProperty("message")) {
-            //It's a message
-            //if message is for this user
-            //   and a function to handle messages is registered 
-            //     then notify the user
-            if(keyValue.key == node.getID()) 
-              if(Node.messageHandler !== null)
-                Node.messageHandler(value.message);
-            //Remove this key
-            Node.node._store._expire(keyValue);
-          }
-        } catch(err) {
-          //Hmm not an object, dont know what to do with such case, as they dont happen
-          console.log("value not object" + keyValue.value+": "+err);
-        }
+      Node.node.join(function() {
+        Node.updateGlobals();
+        callback();
       });
     });
+    Node.node.messageHandler = Node.messageHandler;
+  },
+
+  updateGlobals: function() {
+    // Ask two neighbors about globals
+    // node.messageNeighbors(JSON.stringify({type: "requestGlobal"}), 2);
   },
 
   /**
@@ -124,10 +147,14 @@ var Node = module.exports = {
             value = JSON.parse(value);
             if(value.namespace == namespace)
               results[value.key] = value.value;
-            if(namespace == null)
+            if(namespace == null) {
+              if(results[value.namespace] === undefined) 
+                results[value.namespace] = {};
               results[value.namespace][value.key] = value.value;
+            }
           } catch(e) {
             console.log("Stored value \"" + value + "\" is not a BIER-storage object, ignoring");
+            console.log(e.message);
           } finally {
             left=left-1;
             if(left==0)
@@ -138,14 +165,19 @@ var Node = module.exports = {
     });
   },
 
-  // This thing doest work
   send: function(node, message, callback) {
-    Node.node.sendMessage(node, message, callback);
+    var toSend = {
+      type: "message",
+      data: message
+    }
+    if(callback === undefined)
+      callback = function() {return true};
+    Node.node.sendMessage(node, JSON.stringify(toSend), callback);
   },
 
-  sendByKey: function(namespace, key, message, callback) {
-    Node.send(generateHash(namespace, key), message, callback);
-  },
+  // sendByKey: function(namespace, key, message, callback) {
+  //   Node.send(generateHash(namespace, key), message, callback);
+  // },
 
   registerHandler: function(obj) {
     //TODO: ask Tomo about the key name
@@ -153,21 +185,34 @@ var Node = module.exports = {
   },
 
   registerMessageHandler: function(func) {
-    Node.node.messageHandler = func;
+    Node.messageHandlerFunction = func;
   },
 
   broadcast: function(message) {
-    Node.node.broadcast(message);
+    var toSend = {
+      type: "message",
+      data: message
+    };
+    Node.node.broadcast(JSON.stringify(toSend));
+  },
+
+  setGlobal: function(key, object) {
+    Node._global[key] = object;
+    var toSend = {
+      type: "global",
+      globals: [
+        {
+          key: key,
+          value: object
+        }
+      ]
+    }
+    Node.node.broadcast(JSON.stringify(toSend));
+  },
+
+  getGlobal: function(key, callback) {
+    callback(Node._global[key]);
   }
-
-  // setGlobal: function(object, callback) {
-  //   callback();
-  // }
-
-  // getGlobal: function(callback) {
-  //   var object = null;
-  //   callback(object);
-  // }
 
   // insertPHT: function(name, key, values, callback) {
   //   callback();
