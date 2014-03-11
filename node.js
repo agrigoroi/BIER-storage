@@ -36,7 +36,7 @@ var Node = module.exports = {
     switch(message.type) {
       case "message":
         if(Node.messageHandlerFunction !== null) {
-          Node.messageHandlerFunction(message.data);
+          Node.messageHandlerFunction(message.data, message.source);
           rpc.resolve();
         } else {
           rpc.reject();
@@ -49,13 +49,14 @@ var Node = module.exports = {
         rpc.resolve();
         break;
       case "requestGlobal":
-        var message = {
+        var toSend = {
           type: "global",
-          globals: {}
+          globals: []
         }
         for(key in Node._global)
-          message.global.push({key: key, value: Node.global[key]});
-        Node.send(rpc.getID(), JSON.strigify(message), function() {rpc.resolve()});//Its not rpc.getID()!!
+          toSend.globals.push({key: key, value: Node._global[key]});
+        Node.node.sendMessage(message.source, JSON.stringify(toSend), function() {});
+        rpc.resolve();
     }
   },
 
@@ -72,16 +73,16 @@ var Node = module.exports = {
     Node.node = KadOH.node = new KadOH.logic.KademliaNode(undefined, config);
     Node.node.connect(function() {
       Node.node.join(function() {
-        Node.updateGlobals();
+        Node.node.messageHandler = Node.messageHandler;
         callback();
+        Node.updateGlobals();
       });
     });
-    Node.node.messageHandler = Node.messageHandler;
   },
 
   updateGlobals: function() {
     // Ask two neighbors about globals
-    // node.messageNeighbors(JSON.stringify({type: "requestGlobal"}), 2);
+    Node.node.messageNeighbors(JSON.stringify({type: "requestGlobal", source: Node.node.getID()}), 5);
   },
 
   /**
@@ -168,7 +169,8 @@ var Node = module.exports = {
   send: function(node, message, callback) {
     var toSend = {
       type: "message",
-      data: message
+      data: message,
+      source: Node.node.getID()
     }
     if(callback === undefined)
       callback = function() {return true};
@@ -191,7 +193,8 @@ var Node = module.exports = {
   broadcast: function(message) {
     var toSend = {
       type: "message",
-      data: message
+      data: message, 
+      source: Node.node.getID()
     };
     Node.node.broadcast(JSON.stringify(toSend));
   },
