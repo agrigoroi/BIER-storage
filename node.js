@@ -31,7 +31,6 @@ var Node = module.exports = {
 
   messageHandler: function(rpc) {
     var message = rpc.getMessage();
-    console.log(message);
     message = JSON.parse(message);
     switch(message.type) {
       case "message":
